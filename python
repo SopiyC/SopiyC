@@ -1,0 +1,944 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings 
+warnings.filterwarnings("ignore")
+from sklearn.metrics import precision_score,\
+recall_score,confusion_matrix,classification_report,\
+ accuracy_score,f1_score
+
+Problem statement : Predict who will be interested in Vehicle Insurance
+
+pro1=pd.read_csv("C:/Users/Windows-10/Vehicle.csv")
+pro1
+id	Gender	Age	Driving_License	Region_Code	Previously_Insured	Vehicle_Age	Vehicle_Damage	Annual_Premium	Policy_Sales_Channel	Vintage	Response
+0	1	Male	44	1	28.0	0	> 2 Years	Yes	40454.0	26.0	217	1
+1	2	Male	76	1	3.0	0	1-2 Year	No	33536.0	26.0	183	0
+2	3	Male	47	1	28.0	0	> 2 Years	Yes	38294.0	26.0	27	1
+3	4	Male	21	1	11.0	1	< 1 Year	No	28619.0	152.0	203	0
+4	5	Female	29	1	41.0	1	< 1 Year	No	27496.0	152.0	39	0
+...	...	...	...	...	...	...	...	...	...	...	...	...
+381104	381105	Male	74	1	26.0	1	1-2 Year	No	30170.0	26.0	88	0
+381105	381106	Male	30	1	37.0	1	< 1 Year	No	40016.0	152.0	131	0
+381106	381107	Male	21	1	30.0	1	< 1 Year	No	35118.0	160.0	161	0
+381107	381108	Female	68	1	14.0	0	> 2 Years	Yes	44617.0	124.0	74	0
+381108	381109	Male	46	1	29.0	0	1-2 Year	No	41777.0	26.0	237	0
+381109 rows × 12 columns
+
+pro1.shape
+(381109, 12)
+pro1.Response.value_counts() #Target column
+0    334399
+1     46710
+Name: Response, dtype: int64
+pro1.columns
+Index(['id', 'Gender', 'Age', 'Driving_License', 'Region_Code',
+       'Previously_Insured', 'Vehicle_Age', 'Vehicle_Damage', 'Annual_Premium',
+       'Policy_Sales_Channel', 'Vintage', 'Response'],
+      dtype='object')
+pro1.head()
+id	Gender	Age	Driving_License	Region_Code	Previously_Insured	Vehicle_Age	Vehicle_Damage	Annual_Premium	Policy_Sales_Channel	Vintage	Response
+0	1	Male	44	1	28.0	0	> 2 Years	Yes	40454.0	26.0	217	1
+1	2	Male	76	1	3.0	0	1-2 Year	No	33536.0	26.0	183	0
+2	3	Male	47	1	28.0	0	> 2 Years	Yes	38294.0	26.0	27	1
+3	4	Male	21	1	11.0	1	< 1 Year	No	28619.0	152.0	203	0
+4	5	Female	29	1	41.0	1	< 1 Year	No	27496.0	152.0	39	0
+col=pro1["id"]
+col
+0              1
+1              2
+2              3
+3              4
+4              5
+           ...  
+381104    381105
+381105    381106
+381106    381107
+381107    381108
+381108    381109
+Name: id, Length: 381109, dtype: int64
+#Drop Function 
+pro=pro1.drop(["id"],axis=1)
+pro
+Gender	Age	Driving_License	Region_Code	Previously_Insured	Vehicle_Age	Vehicle_Damage	Annual_Premium	Policy_Sales_Channel	Vintage	Response
+0	Male	44	1	28.0	0	> 2 Years	Yes	40454.0	26.0	217	1
+1	Male	76	1	3.0	0	1-2 Year	No	33536.0	26.0	183	0
+2	Male	47	1	28.0	0	> 2 Years	Yes	38294.0	26.0	27	1
+3	Male	21	1	11.0	1	< 1 Year	No	28619.0	152.0	203	0
+4	Female	29	1	41.0	1	< 1 Year	No	27496.0	152.0	39	0
+...	...	...	...	...	...	...	...	...	...	...	...
+381104	Male	74	1	26.0	1	1-2 Year	No	30170.0	26.0	88	0
+381105	Male	30	1	37.0	1	< 1 Year	No	40016.0	152.0	131	0
+381106	Male	21	1	30.0	1	< 1 Year	No	35118.0	160.0	161	0
+381107	Female	68	1	14.0	0	> 2 Years	Yes	44617.0	124.0	74	0
+381108	Male	46	1	29.0	0	1-2 Year	No	41777.0	26.0	237	0
+381109 rows × 11 columns
+
+Cleaning Process
+pro.isnull().sum() #There is no missing values in this dataset
+Gender                  0
+Age                     0
+Driving_License         0
+Region_Code             0
+Previously_Insured      0
+Vehicle_Age             0
+Vehicle_Damage          0
+Annual_Premium          0
+Policy_Sales_Channel    0
+Vintage                 0
+Response                0
+dtype: int64
+DataType Conversion
+pro.dtypes
+Gender                   object
+Age                       int64
+Driving_License           int64
+Region_Code             float64
+Previously_Insured        int64
+Vehicle_Age              object
+Vehicle_Damage           object
+Annual_Premium          float64
+Policy_Sales_Channel    float64
+Vintage                   int64
+Response                  int64
+dtype: object
+from sklearn.preprocessing import LabelEncoder
+le=LabelEncoder()
+pro.Gender.value_counts()
+Male      206089
+Female    175020
+Name: Gender, dtype: int64
+pro.Vehicle_Age.value_counts()
+1-2 Year     200316
+< 1 Year     164786
+> 2 Years     16007
+Name: Vehicle_Age, dtype: int64
+pro.Vehicle_Damage.value_counts()
+Yes    192413
+No     188696
+Name: Vehicle_Damage, dtype: int64
+pro.Gender=le.fit_transform(pro.Gender)
+pro.Vehicle_Age=le.fit_transform(pro.Vehicle_Age)
+pro.Vehicle_Damage=le.fit_transform(pro.Vehicle_Damage)
+pro.dtypes
+Gender                    int32
+Age                       int64
+Driving_License           int64
+Region_Code             float64
+Previously_Insured        int64
+Vehicle_Age               int32
+Vehicle_Damage            int32
+Annual_Premium          float64
+Policy_Sales_Channel    float64
+Vintage                   int64
+Response                  int64
+dtype: object
+a=[pro[pro["Response"]==1].shape[0],pro[pro["Response"]==0].shape[0]]
+labels_1=["Minor","Major"]
+plt.pie(a,labels=labels_1,colors=("Hotpink","Blue"))
+plt.show()
+
+Base Model
+pro.head(2)
+Gender	Age	Driving_License	Region_Code	Previously_Insured	Vehicle_Age	Vehicle_Damage	Annual_Premium	Policy_Sales_Channel	Vintage	Response
+0	1	44	1	28.0	0	2	1	40454.0	26.0	217	1
+1	1	76	1	3.0	0	0	0	33536.0	26.0	183	0
+x=pro.iloc[:,0:-1]
+y=pro.iloc[:,-1]
+#x.head(2)
+#y.head(2)
+import sklearn
+from sklearn.model_selection import train_test_split
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.2,random_state=101)
+x_train.shape,x_test.shape,y_train.shape,y_test.shape
+((304887, 10), (76222, 10), (304887,), (76222,))
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+lg=LogisticRegression()
+Logistic Regression
+lg.fit(x_train,y_train)
+
+LogisticRegression
+LogisticRegression()
+lg_p=lg.predict(x_test)
+lg_cf=confusion_matrix(y_test,lg_p)
+lg_cf
+array([[66957,    14],
+       [ 9246,     5]], dtype=int64)
+lg_ac=lg_cf.diagonal().sum()/lg_cf.sum()*100
+lg_ac
+87.85127653433392
+print(classification_report(y_test,lg_p))
+              precision    recall  f1-score   support
+
+           0       0.88      1.00      0.94     66971
+           1       0.26      0.00      0.00      9251
+
+    accuracy                           0.88     76222
+   macro avg       0.57      0.50      0.47     76222
+weighted avg       0.80      0.88      0.82     76222
+
+lg_precision=precision_score(y_test,lg_p)
+lg_recall=recall_score(y_test,lg_p)
+lg_f1_score=f1_score(y_test,lg_p)
+DecisionTree
+from sklearn.tree import DecisionTreeClassifier
+dt=DecisionTreeClassifier()
+dt.fit(x_train,y_train)
+
+DecisionTreeClassifier
+DecisionTreeClassifier()
+dt_p=dt.predict(x_test)
+dt_cf=confusion_matrix(y_test,dt_p)
+dt_cf
+array([[60062,  6909],
+       [ 6377,  2874]], dtype=int64)
+dt_ac=dt_cf.diagonal().sum()/dt_cf.sum()*100
+dt_ac
+82.56933693684239
+print(classification_report(y_test,dt_p))
+              precision    recall  f1-score   support
+
+           0       0.90      0.90      0.90     66971
+           1       0.29      0.31      0.30      9251
+
+    accuracy                           0.83     76222
+   macro avg       0.60      0.60      0.60     76222
+weighted avg       0.83      0.83      0.83     76222
+
+dt_precision=precision_score(y_test,dt_p)
+dt_recall=recall_score(y_test,dt_p)
+dt_f1_score=f1_score(y_test,dt_p)
+Random Forest
+from sklearn.ensemble import RandomForestClassifier
+rf=RandomForestClassifier()
+rf.fit(x_train,y_train)
+
+RandomForestClassifier
+RandomForestClassifier()
+rf_p=rf.predict(x_test)
+rf_cf=confusion_matrix(y_test,rf_p)
+rf_cf
+array([[64971,  2000],
+       [ 8145,  1106]], dtype=int64)
+rf_ac=rf_cf.diagonal().sum()/rf_cf.sum()*100
+rf_ac
+86.69019443205373
+print(classification_report(y_test,rf_p))
+              precision    recall  f1-score   support
+
+           0       0.89      0.97      0.93     66971
+           1       0.36      0.12      0.18      9251
+
+    accuracy                           0.87     76222
+   macro avg       0.62      0.54      0.55     76222
+weighted avg       0.82      0.87      0.84     76222
+
+rf_precision=precision_score(y_test,rf_p)
+rf_recall=recall_score(y_test,rf_p)
+rf_f1_score=f1_score(y_test,rf_p)
+KNN
+from sklearn.neighbors import KNeighborsClassifier
+knn=KNeighborsClassifier()
+knn.fit(x_train,y_train)
+
+KNeighborsClassifier
+KNeighborsClassifier()
+knn_p=knn.predict(x_test)
+knn_cf=confusion_matrix(y_test,knn_p)
+knn_cf
+array([[65027,  1944],
+       [ 8687,   564]], dtype=int64)
+knn_ac=knn_cf.diagonal().sum()/knn_cf.sum()*100
+knn_ac
+86.05258324368292
+print(classification_report(y_test,knn_p))
+              precision    recall  f1-score   support
+
+           0       0.88      0.97      0.92     66971
+           1       0.22      0.06      0.10      9251
+
+    accuracy                           0.86     76222
+   macro avg       0.55      0.52      0.51     76222
+weighted avg       0.80      0.86      0.82     76222
+
+knn_precision=precision_score(y_test,knn_p)
+knn_recall=recall_score(y_test,knn_p)
+knn_f1_score=f1_score(y_test,knn_p)
+XGB
+import xgboost
+from xgboost import XGBClassifier
+xgb=XGBClassifier()
+xgb.fit(x_train,y_train)
+
+XGBClassifier
+XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric=None, feature_types=None,
+              gamma=None, gpu_id=None, grow_policy=None, importance_type=None,
+              interaction_constraints=None, learning_rate=None, max_bin=None,
+              max_cat_threshold=None, max_cat_to_onehot=None,
+              max_delta_step=None, max_depth=None, max_leaves=None,
+              min_child_weight=None, missing=nan, monotone_constraints=None,
+              n_estimators=100, n_jobs=None, num_parallel_tree=None,
+              predictor=None, random_state=None, ...)
+xgb_p=xgb.predict(x_test)
+xgb_cf=confusion_matrix(y_test,xgb_p)
+xgb_cf
+array([[66691,   280],
+       [ 9021,   230]], dtype=int64)
+xgb_ac=xgb_cf.diagonal().sum()/xgb_cf.sum()*100
+xgb_ac
+87.79748629004749
+print(classification_report(y_test,xgb_p))
+              precision    recall  f1-score   support
+
+           0       0.88      1.00      0.93     66971
+           1       0.45      0.02      0.05      9251
+
+    accuracy                           0.88     76222
+   macro avg       0.67      0.51      0.49     76222
+weighted avg       0.83      0.88      0.83     76222
+
+xgb_precision=precision_score(y_test,xgb_p)
+xgb_recall=recall_score(y_test,xgb_p)
+xgb_f1_score=f1_score(y_test,xgb_p)
+NaiveBayes
+from sklearn.naive_bayes import MultinomialNB
+nb=MultinomialNB()
+nb.fit(x_train,y_train)
+
+MultinomialNB
+MultinomialNB()
+nb_p=nb.predict(x_test)
+nb_cf=confusion_matrix(y_test,nb_p)
+nb_cf
+array([[46685, 20286],
+       [ 4648,  4603]], dtype=int64)
+nb_ac=nb_cf.diagonal().sum()/nb_cf.sum()*100
+nb_ac
+67.28765973078639
+print(classification_report(y_test,nb_p))
+              precision    recall  f1-score   support
+
+           0       0.91      0.70      0.79     66971
+           1       0.18      0.50      0.27      9251
+
+    accuracy                           0.67     76222
+   macro avg       0.55      0.60      0.53     76222
+weighted avg       0.82      0.67      0.73     76222
+
+nb_precision=precision_score(y_test,nb_p)
+nb_recall=recall_score(y_test,nb_p)
+nb_f1_score=f1_score(y_test,nb_p)
+algo=["Logistic","Decision Tree","Random Forest","KNN","XGB","Naive Bayes"]
+accuracy=[lg_ac,dt_ac,rf_ac,knn_ac,xgb_ac,nb_ac]
+precision=[lg_precision,dt_precision,rf_precision,knn_precision,xgb_precision,nb_precision]
+recall=[lg_recall,dt_recall,rf_recall,knn_recall,xgb_recall,nb_recall]
+f1_score=[lg_f1_score,dt_f1_score,rf_f1_score,knn_f1_score,xgb_f1_score,nb_f1_score]
+df1=pd.DataFrame({"Algorithm":algo,"Accuracy":accuracy,"Precision":precision,"Recall":recall,"F1_score":f1_score})
+df1
+Algorithm	Accuracy	Precision	Recall	F1_score
+0	Logistic	87.851277	0.263158	0.000540	0.001079
+1	Decision Tree	82.569337	0.293775	0.310669	0.301986
+2	Random Forest	86.690194	0.356085	0.119555	0.179008
+3	KNN	86.052583	0.224880	0.060966	0.095927
+4	XGB	87.797486	0.450980	0.024862	0.047126
+5	Naive Bayes	67.287660	0.184941	0.497568	0.269654
+Conclusion : In general, the performance of all models is very low, but if it is necessary to choose the best model, you have to pick a single model it should be Random Forest and XGB because the accuracy,F1 score,Recall,precesion of model is good as compare to other model.
+
+Class Imbalance Technique
+Random-OverSampling
+pro.Response.value_counts()
+0    334399
+1     46710
+Name: Response, dtype: int64
+sns.countplot(data=pro,y="Response")
+plt.show()
+
+c_0,c_1=pro["Response"].value_counts()
+c_0,c_1
+(334399, 46710)
+train_0=pro[pro["Response"]==0]
+train_1=pro[pro["Response"]==1]
+train_0.shape
+(334399, 11)
+class_lover=train_1.sample(c_0,replace=True)
+class_lover.head()
+class_lover.shape,train_0.shape
+((334399, 11), (334399, 11))
+class1_0=pd.concat([class_lover,train_0],axis=0)
+class1_0.shape
+(668798, 11)
+class1_0.Response.value_counts()
+1    334399
+0    334399
+Name: Response, dtype: int64
+x1=class1_0.iloc[:,1:-1]
+y1=class1_0.iloc[:,-1]
+x1_tr,x1_te,y1_tr,y1_te=train_test_split(x1,y1,test_size=0.2,random_state=100)
+x1_tr.shape,x1_te.shape,y1_tr.shape,y1_te.shape
+((535038, 9), (133760, 9), (535038,), (133760,))
+Correlation
+b=pro.corr()
+b
+Gender	Age	Driving_License	Region_Code	Previously_Insured	Vehicle_Age	Vehicle_Damage	Annual_Premium	Policy_Sales_Channel	Vintage	Response
+Gender	1.000000	0.145545	-0.018374	0.000604	-0.081932	-0.112625	0.091606	0.003673	-0.111159	-0.002517	0.052440
+Age	0.145545	1.000000	-0.079782	0.042574	-0.254682	-0.522300	0.267534	0.067507	-0.577826	-0.001264	0.111147
+Driving_License	-0.018374	-0.079782	1.000000	-0.001081	0.014969	0.030173	-0.016622	-0.011906	0.043731	-0.000848	0.010155
+Region_Code	0.000604	0.042574	-0.001081	1.000000	-0.024659	-0.027840	0.028235	-0.010588	-0.042420	-0.002750	0.010570
+Previously_Insured	-0.081932	-0.254682	0.014969	-0.024659	1.000000	0.174783	-0.824143	0.004269	0.219381	0.002537	-0.341170
+Vehicle_Age	-0.112625	-0.522300	0.030173	-0.027840	0.174783	1.000000	-0.174238	0.023656	0.388551	0.002484	-0.104078
+Vehicle_Damage	0.091606	0.267534	-0.016622	0.028235	-0.824143	-0.174238	1.000000	0.009349	-0.224377	-0.002064	0.354400
+Annual_Premium	0.003673	0.067507	-0.011906	-0.010588	0.004269	0.023656	0.009349	1.000000	-0.113247	-0.000608	0.022575
+Policy_Sales_Channel	-0.111159	-0.577826	0.043731	-0.042420	0.219381	0.388551	-0.224377	-0.113247	1.000000	0.000002	-0.139042
+Vintage	-0.002517	-0.001264	-0.000848	-0.002750	0.002537	0.002484	-0.002064	-0.000608	0.000002	1.000000	-0.001050
+Response	0.052440	0.111147	0.010155	0.010570	-0.341170	-0.104078	0.354400	0.022575	-0.139042	-0.001050	1.000000
+plt.figure(figsize=(15,10))
+heatmap=sns.heatmap(b,linewidth=1,annot=True,cmap=plt.cm.Reds)
+plt.title("Vehicle Insurance")
+plt.show()
+
+Outlier Treatment
+class1_0.skew()
+Gender                  -0.284697
+Age                      0.460472
+Driving_License        -25.336531
+Region_Code             -0.176281
+Previously_Insured       1.079139
+Vehicle_Age              1.058757
+Vehicle_Damage          -0.919314
+Annual_Premium           1.963321
+Policy_Sales_Channel    -0.597109
+Vintage                 -0.000377
+Response                 0.000000
+dtype: float64
+plt.figure(figsize=(20,12))
+sns.boxplot(data=class1_0)
+plt.show()
+
+fig=plt.figure(figsize=(5,5))
+sns.boxplot(data=class1_0,y="Annual_Premium")
+plt.show()
+
+sns.distplot(class1_0.Annual_Premium) 
+plt.show()
+
+class1_0.Annual_Premium.hist()
+plt.show()
+
+ub1=class1_0.Annual_Premium.mean()+3*class1_0.Annual_Premium.std()
+lb1=class1_0.Annual_Premium.mean()-3*class1_0.Annual_Premium.std()
+print(ub1,lb1)
+84352.22183834744 -22339.73606536367
+class1_0.loc[class1_0["Annual_Premium"]>84878.504,"Annual_Premium"]=84878.504
+sns.distplot(class1_0.Annual_Premium) 
+plt.show()
+
+class1_0.Annual_Premium.hist()
+plt.show()
+
+class1_0.skew()
+Gender                  -0.284697
+Age                      0.460472
+Driving_License        -25.336531
+Region_Code             -0.176281
+Previously_Insured       1.079139
+Vehicle_Age              1.058757
+Vehicle_Damage          -0.919314
+Annual_Premium          -0.064132
+Policy_Sales_Channel    -0.597109
+Vintage                 -0.000377
+Response                 0.000000
+dtype: float64
+Visualization
+labels = 'Minor', 'Major'
+sizes = [pro.Response[pro['Response']==1].count(), pro.Response[pro['Response']==0].count()]
+explode = (0, 0.1)
+fig1, ax1 = plt.subplots(figsize=(10, 8))
+ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax1.axis('equal')
+plt.title("Proportion of Insurance Not Response", size = 20)
+plt.show()
+
+Logistic Regression
+lg.fit(x1_tr,y1_tr)
+
+LogisticRegression
+LogisticRegression()
+lg_p1=lg.predict(x1_te)
+lg_c1=confusion_matrix(y1_te,lg_p1)
+lg_c1
+array([[43856, 23094],
+       [32966, 33844]], dtype=int64)
+lg_ac1=lg_c1.diagonal().sum()/lg_c1.sum()*100
+lg_ac1
+58.089114832535884
+print(classification_report(y1_te,lg_p1))
+              precision    recall  f1-score   support
+
+           0       0.57      0.66      0.61     66950
+           1       0.59      0.51      0.55     66810
+
+    accuracy                           0.58    133760
+   macro avg       0.58      0.58      0.58    133760
+weighted avg       0.58      0.58      0.58    133760
+
+from sklearn.metrics import precision_score,\
+recall_score,confusion_matrix,classification_report,\
+ accuracy_score,f1_score
+lg1_precision=precision_score(y1_te,lg_p1)
+lg1_recall=recall_score(y1_te,lg_p1)
+lg1_f1_score=f1_score(y1_te,lg_p1)
+DecisionTree
+dt.fit(x1_tr,y1_tr)
+
+DecisionTreeClassifier
+DecisionTreeClassifier()
+dt_p1=dt.predict(x1_te)
+dt_c1=confusion_matrix(y1_te,dt_p1)
+dt_c1
+array([[59560,  7390],
+       [  134, 66676]], dtype=int64)
+dt_ac1=dt_c1.diagonal().sum()/dt_c1.sum()*100
+dt_ac1
+94.375
+print(classification_report(y1_te,dt_p1))
+              precision    recall  f1-score   support
+
+           0       1.00      0.89      0.94     66950
+           1       0.90      1.00      0.95     66810
+
+    accuracy                           0.94    133760
+   macro avg       0.95      0.94      0.94    133760
+weighted avg       0.95      0.94      0.94    133760
+
+dt1_precision=precision_score(y1_te,dt_p1)
+dt1_recall=recall_score(y1_te,dt_p1)
+dt1_f1_score=f1_score(y1_te,dt_p1)
+Random Forest
+from sklearn.ensemble import RandomForestClassifier
+rf1=RandomForestClassifier()
+rf1.fit(x1_tr,y1_tr)
+
+RandomForestClassifier
+RandomForestClassifier()
+rf_p1=rf1.predict(x1_te)
+rf_c1=confusion_matrix(y1_te,rf_p1)
+rf_c1
+array([[60127,  6823],
+       [  138, 66672]], dtype=int64)
+rf_ac1=rf_c1.diagonal().sum()/rf_c1.sum()*100
+rf_ac1
+94.79590311004785
+print(classification_report(y1_te,rf_p1))
+              precision    recall  f1-score   support
+
+           0       1.00      0.90      0.95     66950
+           1       0.91      1.00      0.95     66810
+
+    accuracy                           0.95    133760
+   macro avg       0.95      0.95      0.95    133760
+weighted avg       0.95      0.95      0.95    133760
+
+rf1_precision=precision_score(y1_te,rf_p1)
+rf1_recall=recall_score(y1_te,rf_p1)
+rf1_f1_score=f1_score(y1_te,rf_p1)
+KNN
+knn.fit(x1_tr,y1_tr)
+
+KNeighborsClassifier
+KNeighborsClassifier()
+knn_p1=knn.predict(x1_te)
+knn_c1=confusion_matrix(y1_te,knn_p1)
+knn_c1
+array([[45370, 21580],
+       [ 2370, 64440]], dtype=int64)
+knn_ac1=knn_c1.diagonal().sum()/knn_c1.sum()*100
+knn_ac1
+82.09479665071771
+print(classification_report(y1_te,knn_p1))
+              precision    recall  f1-score   support
+
+           0       0.95      0.68      0.79     66950
+           1       0.75      0.96      0.84     66810
+
+    accuracy                           0.82    133760
+   macro avg       0.85      0.82      0.82    133760
+weighted avg       0.85      0.82      0.82    133760
+
+knn1_precision=precision_score(y1_te,knn_p1)
+knn1_recall=recall_score(y1_te,knn_p1)
+knn1_f1_score=f1_score(y1_te,knn_p1)
+XGB
+xgb.fit(x1_tr,y1_tr)
+
+XGBClassifier
+XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric=None, feature_types=None,
+              gamma=None, gpu_id=None, grow_policy=None, importance_type=None,
+              interaction_constraints=None, learning_rate=None, max_bin=None,
+              max_cat_threshold=None, max_cat_to_onehot=None,
+              max_delta_step=None, max_depth=None, max_leaves=None,
+              min_child_weight=None, missing=nan, monotone_constraints=None,
+              n_estimators=100, n_jobs=None, num_parallel_tree=None,
+              predictor=None, random_state=None, ...)
+xgb_p1=xgb.predict(x1_te)
+xgb_c1=confusion_matrix(y1_te,xgb_p1)
+xgb_c1
+array([[46016, 20934],
+       [ 4085, 62725]], dtype=int64)
+xgb_ac1=xgb_c1.diagonal().sum()/xgb_c1.sum()*100
+xgb_ac1
+81.29560406698565
+print(classification_report(y1_te,xgb_p1))
+              precision    recall  f1-score   support
+
+           0       0.92      0.69      0.79     66950
+           1       0.75      0.94      0.83     66810
+
+    accuracy                           0.81    133760
+   macro avg       0.83      0.81      0.81    133760
+weighted avg       0.83      0.81      0.81    133760
+
+xgb1_precision=precision_score(y1_te,xgb_p1)
+xgb1_recall=recall_score(y1_te,xgb_p1)
+xgb1_f1_score=f1_score(y1_te,xgb_p1)
+Naive Bayes
+nb.fit(x1_tr,y1_tr)
+
+MultinomialNB
+MultinomialNB()
+nb_p1=nb.predict(x1_te)
+nb_c1=confusion_matrix(y1_te,nb_p1)
+nb_c1
+array([[45353, 21597],
+       [31621, 35189]], dtype=int64)
+nb_ac1=nb_c1.diagonal().sum()/nb_c1.sum()*100
+nb_ac1
+60.21381578947368
+print(classification_report(y1_te,nb_p1))
+              precision    recall  f1-score   support
+
+           0       0.59      0.68      0.63     66950
+           1       0.62      0.53      0.57     66810
+
+    accuracy                           0.60    133760
+   macro avg       0.60      0.60      0.60    133760
+weighted avg       0.60      0.60      0.60    133760
+
+nb1_precision=precision_score(y1_te,nb_p1)
+nb1_recall=recall_score(y1_te,nb_p1)
+nb1_f1_score=f1_score(y1_te,nb_p1)
+Model2 After CI and EDA
+algo1=["Logistic","Decision Tree","Random Forest","KNN","XGB","Naive Bayes"]
+accuracy1=[lg_ac1,dt_ac1,rf_ac1,knn_ac1,xgb_ac1,nb_ac1]
+precision1=[lg1_precision,dt1_precision,rf1_precision,knn1_precision,xgb1_precision,nb1_precision]
+recall1=[lg1_recall,dt1_recall,rf1_recall,knn1_recall,xgb1_recall,nb1_recall]
+f1_score1=[lg1_f1_score,dt1_f1_score,rf1_f1_score,knn1_f1_score,xgb1_f1_score,nb1_f1_score]
+df2=pd.DataFrame({"Algorithm":algo1,"Accuracy":accuracy1,"Precision":precision1,"Recall":recall1,"F1_score":f1_score1})
+df2
+Algorithm	Accuracy	Precision	Recall	F1_score
+0	Logistic	58.089115	0.594401	0.506571	0.546983
+1	Decision Tree	94.375000	0.900224	0.997994	0.946591
+2	Random Forest	94.795903	0.907164	0.997934	0.950387
+3	KNN	82.094797	0.749128	0.964526	0.843290
+4	XGB	81.295604	0.749770	0.938856	0.833727
+5	Naive Bayes	60.213816	0.619677	0.526703	0.569420
+Conclusion : after Doing class imbalance and outlier treatment the accuracy of the model is increases as compare to data Frame 1 Random Forest, Decision Tree because the accuracy,F1 score,Recall,precesion of model is good as compare to other model.
+
+#SMOTE
+
+#pro.Response.value_counts()
+
+#x2=da1.iloc[:,0:-1]
+#y2=da1.iloc[:,-1]
+
+#x2_tr,x2_te,y2_tr,y2_te=train_test_split(x2,y2,test_size=0.2,random_state=100)
+#x2_tr.shape,x2_te.shape,y2_tr.shape,y2_te.shape
+
+#from imblearn.over_sampling import SMOTE
+#smote=SMOTE()
+
+#x_smote,y_smote=smote.fit_resample(x2,y2)
+
+#x_smote.shape,y_smote.shape
+Feature Selection
+from sklearn.feature_selection import RFE
+from sklearn.ensemble import RandomForestClassifier
+rf1=RandomForestClassifier()
+rfe=RFE(rf1,n_features_to_select=8)
+rfe.fit(class1_0.iloc[:,0:-1],class1_0.iloc[:,-1])
+RFE
+estimator: RandomForestClassifier
+
+RandomForestClassifier
+rfe.support_
+array([False,  True, False,  True,  True,  True,  True,  True,  True,
+        True])
+f1=pd.DataFrame({'feature':list(rfe.support_),'col':list(class1_0.iloc[:,0:-1].columns)})
+f1
+feature	col
+0	False	Gender
+1	True	Age
+2	False	Driving_License
+3	True	Region_Code
+4	True	Previously_Insured
+5	True	Vehicle_Age
+6	True	Vehicle_Damage
+7	True	Annual_Premium
+8	True	Policy_Sales_Channel
+9	True	Vintage
+class1_0.columns
+Index(['Gender', 'Age', 'Driving_License', 'Region_Code', 'Previously_Insured',
+       'Vehicle_Age', 'Vehicle_Damage', 'Annual_Premium',
+       'Policy_Sales_Channel', 'Vintage', 'Response'],
+      dtype='object')
+# List of columns to drop
+df=class1_0.drop(["Driving_License","Vehicle_Age"],axis=1)
+df.isnull().sum()
+Gender                  0
+Age                     0
+Region_Code             0
+Previously_Insured      0
+Vehicle_Damage          0
+Annual_Premium          0
+Policy_Sales_Channel    0
+Vintage                 0
+Response                0
+dtype: int64
+n_x=df.iloc[:,0:-1]
+n_y=df.iloc[:,-1]
+xtr,xte,ytr,yte=train_test_split(n_x,n_y,test_size=0.2,random_state=101)
+xtr.shape,xte.shape,ytr.shape,yte.shape
+((535038, 8), (133760, 8), (535038,), (133760,))
+Logistic Regression
+lg.fit(xtr,ytr)
+
+LogisticRegression
+LogisticRegression()
+lg_p2=lg.predict(xte)
+lg_c2=confusion_matrix(yte,lg_p2)
+lg_c2
+array([[49134, 17625],
+       [28678, 38323]], dtype=int64)
+lg_ac2=lg_c2.diagonal().sum()/lg_c2.sum()*100
+lg_ac2
+65.38352272727272
+print(classification_report(yte,lg_p2))
+              precision    recall  f1-score   support
+
+           0       0.63      0.74      0.68     66759
+           1       0.68      0.57      0.62     67001
+
+    accuracy                           0.65    133760
+   macro avg       0.66      0.65      0.65    133760
+weighted avg       0.66      0.65      0.65    133760
+
+from sklearn.metrics import precision_score,\
+recall_score,confusion_matrix,classification_report,\
+ accuracy_score,f1_score
+lg2_precision=precision_score(yte,lg_p2)
+lg2_recall=recall_score(yte,lg_p2)
+lg2_f1_score=f1_score(yte,lg_p2)
+DecisionTree
+dt.fit(xtr,ytr)
+
+DecisionTreeClassifier
+DecisionTreeClassifier()
+dt_p2=dt.predict(xte)
+dt_c2=confusion_matrix(yte,dt_p2)
+dt_c2
+array([[59498,  7261],
+       [  153, 66848]], dtype=int64)
+dt_ac2=dt_c2.diagonal().sum()/dt_c2.sum()*100
+dt_ac2
+94.45723684210526
+print(classification_report(yte,dt_p2))
+              precision    recall  f1-score   support
+
+           0       1.00      0.89      0.94     66759
+           1       0.90      1.00      0.95     67001
+
+    accuracy                           0.94    133760
+   macro avg       0.95      0.94      0.94    133760
+weighted avg       0.95      0.94      0.94    133760
+
+dt2_precision=precision_score(yte,dt_p2)
+dt2_recall=recall_score(yte,dt_p2)
+dt2_f1_score=f1_score(yte,dt_p2)
+RandomForest
+rf.fit(xtr,ytr)
+
+RandomForestClassifier
+RandomForestClassifier()
+rf_p2=rf.predict(xte)
+rf_c2=confusion_matrix(yte,rf_p2)
+rf_c2
+array([[60156,  6603],
+       [  139, 66862]], dtype=int64)
+rf_ac2=rf_c2.diagonal().sum()/rf_c2.sum()*100
+rf_ac2
+94.95962918660287
+print(classification_report(yte,rf_p2))
+              precision    recall  f1-score   support
+
+           0       1.00      0.90      0.95     66759
+           1       0.91      1.00      0.95     67001
+
+    accuracy                           0.95    133760
+   macro avg       0.95      0.95      0.95    133760
+weighted avg       0.95      0.95      0.95    133760
+
+rf2_precision=precision_score(yte,rf_p2)
+rf2_recall=recall_score(yte,rf_p2)
+rf2_f1_score=f1_score(yte,rf_p2)
+KNN
+knn.fit(xtr,ytr)
+
+KNeighborsClassifier
+KNeighborsClassifier()
+knn_p2=knn.predict(xte)
+knn_c2=confusion_matrix(yte,knn_p2)
+knn_c2
+array([[45182, 21577],
+       [ 2475, 64526]], dtype=int64)
+knn_ac2=knn_c2.diagonal().sum()/knn_c2.sum()*100
+knn_ac2
+82.01854066985645
+print(classification_report(yte,knn_p2))
+              precision    recall  f1-score   support
+
+           0       0.95      0.68      0.79     66759
+           1       0.75      0.96      0.84     67001
+
+    accuracy                           0.82    133760
+   macro avg       0.85      0.82      0.82    133760
+weighted avg       0.85      0.82      0.82    133760
+
+knn2_precision=precision_score(yte,knn_p2)
+knn2_recall=recall_score(yte,knn_p2)
+knn2_f1_score=f1_score(yte,knn_p2)
+XGB
+xgb.fit(xtr,ytr)
+
+XGBClassifier
+XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric=None, feature_types=None,
+              gamma=None, gpu_id=None, grow_policy=None, importance_type=None,
+              interaction_constraints=None, learning_rate=None, max_bin=None,
+              max_cat_threshold=None, max_cat_to_onehot=None,
+              max_delta_step=None, max_depth=None, max_leaves=None,
+              min_child_weight=None, missing=nan, monotone_constraints=None,
+              n_estimators=100, n_jobs=None, num_parallel_tree=None,
+              predictor=None, random_state=None, ...)
+xgb_p2=xgb.predict(xte)
+xgb_c2=confusion_matrix(yte,xgb_p2)
+xgb_c2
+array([[45708, 21051],
+       [ 3956, 63045]], dtype=int64)
+xgb_ac2=xgb_c2.diagonal().sum()/xgb_c2.sum()*100
+xgb_ac2
+81.30457535885168
+print(classification_report(yte,xgb_p2))
+              precision    recall  f1-score   support
+
+           0       0.92      0.68      0.79     66759
+           1       0.75      0.94      0.83     67001
+
+    accuracy                           0.81    133760
+   macro avg       0.84      0.81      0.81    133760
+weighted avg       0.83      0.81      0.81    133760
+
+xgb2_precision=precision_score(yte,xgb_p2)
+xgb2_recall=recall_score(yte,xgb_p2)
+xgb2_f1_score=f1_score(yte,xgb_p2)
+NaiveBayes
+nb.fit(xtr,ytr)
+
+MultinomialNB
+MultinomialNB()
+nb_p2=nb.predict(xte)
+nb_c2=confusion_matrix(yte,nb_p2)
+nb_c2
+array([[45001, 21758],
+       [31772, 35229]], dtype=int64)
+nb_ac2=nb_c2.diagonal().sum()/nb_c2.sum()*100
+nb_ac2
+59.98056220095693
+print(classification_report(yte,nb_p2))
+              precision    recall  f1-score   support
+
+           0       0.59      0.67      0.63     66759
+           1       0.62      0.53      0.57     67001
+
+    accuracy                           0.60    133760
+   macro avg       0.60      0.60      0.60    133760
+weighted avg       0.60      0.60      0.60    133760
+
+nb2_precision=precision_score(yte,nb_p2)
+nb2_recall=recall_score(yte,nb_p2)
+nb2_f1_score=f1_score(yte,nb_p2)
+algo2=["Logistic","Decision Tree","Random Forest","KNN","XGB","Naive Bayes"]
+accuracy2=[lg_ac2,dt_ac2,rf_ac2,knn_ac2,xgb_ac2,nb_ac2]
+precision2=[lg2_precision,dt2_precision,rf2_precision,knn2_precision,xgb2_precision,nb2_precision]
+recall2=[lg2_recall,dt2_recall,rf2_recall,knn2_recall,xgb2_recall,nb2_recall]
+f1_score2=[lg2_f1_score,dt2_f1_score,rf2_f1_score,knn2_f1_score,xgb2_f1_score,nb2_f1_score]
+df3=pd.DataFrame({"Algorithm":algo2,"Accuracy":accuracy2,"Precision":precision2,"Recall":recall2,"F1_score":f1_score2})
+df3
+Algorithm	Accuracy	Precision	Recall	F1_score
+0	Logistic	65.383523	0.684975	0.571977	0.623397
+1	Decision Tree	94.457237	0.902023	0.997716	0.947459
+2	Random Forest	94.959629	0.910120	0.997925	0.952003
+3	KNN	82.018541	0.749405	0.963060	0.842904
+4	XGB	81.304575	0.749679	0.940956	0.834497
+5	Naive Bayes	59.980562	0.618194	0.525798	0.568265
+#Confusion matrix for Random Forest model because the performance of model is good as compare to other model
+cm=confusion_matrix(yte,rf_p2)
+sns.heatmap(cm,annot=True,fmt='d')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Import necessary libraries
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_classification
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_curve, roc_auc_score, auc
+
+clf = RandomForestClassifier()
+
+# Train the classifier
+clf.fit(xtr,ytr)
+
+# Predict probabilities for the positive class (class 1)
+rf_f = clf.predict_proba(xte)[:, 1]
+
+# Calculate ROC curve
+fpr, tpr, thresholds = roc_curve(yte,rf_p2)
+
+# Calculate AUC (Area Under the Curve)
+roc_auc = auc(fpr, tpr)
+
+# Plot the ROC curve
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC)')
+plt.legend(loc='lower right')
+plt.show()
+
+Conclusion : After applying feature selection technique the accuracy of the model is quite increases in this case Random forest is good fitted to the data and also we can conclude the result by using ROC and AUC Curve.
